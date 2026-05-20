@@ -26,3 +26,9 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Frontend
+frontend-vite/node_modules/
+frontend-vite/dist/
+frontend-vite/.vite/
+frontend-vite-dist/

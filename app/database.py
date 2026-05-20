@@ -3,192 +3,63 @@ SAGEN-Sync: Automated Wealth Orchestrator
 Database Module
 ===============
 
-Handles all database operations using SQLite.
-Provides a clean interface for app initialization and query execution.
+Handles all database operations using SQLAlchemy with PostgreSQL (Vercel) or SQLite (local).
 
 Schema Design:
     clients: Static client information (one per client/family)
     reports: Quarterly report data (one per quarter per client)
     audit_logs: Compliance tracking (V2 extensibility)
 
-All tables use INTEGER PRIMARY KEY for auto-increment IDs.
+All tables use auto-increment IDs.
 JSON columns store flexible data (account lists, liability details).
 """
 
-import sqlite3
 import json
 from datetime import datetime
 from flask import g, current_app
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
+
+db = SQLAlchemy()
 
 
 def get_db():
     """
-    Get a database connection for the current request.
-    
-    Uses Flask's g object to persist the connection across
-    a single request (not across requests).
-    
-    Returns:
-        sqlite3.Connection: Active database connection
+    Get the SQLAlchemy session for the current request.
     """
-    if "db" not in g:
-        # Connect with row factory for dict-like access
-        g.db = sqlite3.connect(
-            current_app.config["DATABASE_PATH"],
-            detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        g.db.row_factory = sqlite3.Row  # Access columns by name
-    return g.db
+    return db.session
 
 
 def close_db(e=None):
     """
-    Close the database connection at the end of each request.
-    Registered as a teardown function on the Flask app.
+    Close the database session at the end of each request.
     """
-    db = g.pop("db", None)
-    if db is not None:
-        db.close()
+    db.session.remove()
 
 
 def init_db(app):
     """
-    Initialize the database schema.
+    Initialize the database.
     Creates all tables if they don't exist.
     Also registers the close_db teardown function.
-    
-    Called once when the Flask app starts.
     """
-    # Register teardown to close DB after each request
+    db.init_app(app)
     app.teardown_appcontext(close_db)
-    
-    # Create tables within app context
+
     with app.app_context():
-        db = get_db()
-        create_tables(db)
+        create_tables()
 
 
-def create_tables(db):
-    """
-    Create all database tables if they don't exist.
-    
-    Tables:
-        clients: Static client profile data
-        reports: Quarterly financial report data
-        audit_logs: V2 compliance tracking (currently unused)
-    
-    Args:
-        db (sqlite3.Connection): Active database connection
-    """
-    cursor = db.cursor()
-    
-    # ============================================================
-    # CLIENTS TABLE
-    # Stores static client information entered once during setup.
-    # JSON fields allow flexible account and liability structures.
-    # ============================================================
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS clients (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            
-            -- Basic Info (required)
-            first_name TEXT NOT NULL,
-            last_name TEXT NOT NULL,
-            date_of_birth TEXT NOT NULL,  -- YYYY-MM-DD format
-            ssn_last_four TEXT NOT NULL,  -- e.g., "1234"
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            
-            -- Marital Status
-            is_married INTEGER DEFAULT 0,  -- 0 = single, 1 = married
-            
-            -- Spouse Info (optional, NULL if single)
-            spouse_first_name TEXT,
-            spouse_last_name TEXT,
-            spouse_dob TEXT,
-            spouse_ssn_last_four TEXT,
-            
-            -- Financial Info (static)
-            monthly_salary REAL DEFAULT 0,      -- After-tax monthly income
-            agreed_expense_budget REAL DEFAULT 0, -- Agreed monthly expense budget
-            private_reserve_target REAL DEFAULT 0, -- If manually set; otherwise auto-calc
-            
-            -- Flexible Data (stored as JSON for extensibility)
-            retirement_accounts TEXT DEFAULT '[]',    -- JSON: [{type, last_four, is_spouse}]
-            non_retirement_accounts TEXT DEFAULT '[]',  -- JSON: [{type, last_four, is_joint}]
-            trust_info TEXT DEFAULT '{}',               -- JSON: {address, property_value}
-            liabilities TEXT DEFAULT '[]',            -- JSON: [{type, balance, interest_rate}]
-            
-            -- Metadata
-            notes TEXT
-        )
-    """)
-    
-    # ============================================================
-    # REPORTS TABLE
-    # Stores quarterly financial data entered before each client meeting.
-    # Links to clients table via client_id.
-    # ============================================================
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS reports (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            client_id INTEGER NOT NULL,
-            quarter TEXT NOT NULL,          -- Q1, Q2, Q3, or Q4
-            year INTEGER NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            
-            -- Dynamic Balances (JSON for flexibility)
-            account_balances TEXT DEFAULT '{}',  -- JSON: {account_id: balance}
-            zillow_home_value REAL DEFAULT 0,     -- Trust property Zestimate
-            private_reserve_balance REAL DEFAULT 0,
-            
-            -- SACS Data
-            inflow_amount REAL DEFAULT 0,
-            outflow_amount REAL DEFAULT 0,
-            excess_amount REAL DEFAULT 0,       -- Auto-calculated
-            
-            -- TCC Data
-            total_retirement_client1 REAL DEFAULT 0,
-            total_retirement_client2 REAL DEFAULT 0,
-            total_non_retirement REAL DEFAULT 0,
-            trust_value REAL DEFAULT 0,
-            total_liabilities REAL DEFAULT 0,
-            grand_total REAL DEFAULT 0,
-            
-            -- Status & Output
-            status TEXT DEFAULT 'draft',  -- draft, finalized, archived
-            pdf_sacs_path TEXT,           -- Path to generated SACS PDF
-            pdf_tcc_path TEXT,            -- Path to generated TCC PDF
-            
-            -- Foreign key constraint
-            FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
-        )
-    """)
-    
-    # ============================================================
-    # AUDIT_LOGS TABLE (V2 Extensibility)
-    # Prepared for future compliance and auditing requirements.
-    # Currently unused but schema is ready.
-    # ============================================================
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS audit_logs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            action TEXT NOT NULL,           -- e.g., 'data_pull', 'report_generated'
-            user_id TEXT,                   -- Who performed the action
-            client_id INTEGER,              -- Which client affected
-            details TEXT DEFAULT '{}',      -- JSON: additional context
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    
-    # Create indexes for common queries
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_reports_client ON reports(client_id)")
-    cursor.execute("CREATE INDEX IF NOT EXISTS idx_reports_quarter ON reports(quarter, year)")
-    
-    db.commit()
-    
-    
+def _get_last_insert_id():
+    """Get the last inserted ID, handling both SQLite and PostgreSQL."""
+    dialect_name = db.engine.dialect.name
+    if dialect_name == 'postgresql':
+        return db.session.execute(text("SELECT lastval()")).scalar()
+    else:
+        # SQLite
+        return db.session.execute(text("SELECT last_insert_rowid()")).scalar()
+
+
 def execute_query(query, params=(), fetch_one=False):
     """
     Execute a parameterized SQL query.
@@ -198,30 +69,52 @@ def execute_query(query, params=(), fetch_one=False):
     
     Args:
         query (str): SQL query string with ? placeholders
-        params (tuple): Values to substitute into the query
+        params (tuple or dict): Values to substitute into the query
         fetch_one (bool): Return single row or all rows
     
     Returns:
         dict or list: Query results
     """
-    db = get_db()
-    cursor = db.cursor()
-    
     try:
-        cursor.execute(query, params)
-        db.commit()
-        
+        # Convert tuple params to dict for SQLAlchemy text()
+        if isinstance(params, tuple):
+            param_dict = {f"p{i}": p for i, p in enumerate(params)}
+            
+            # Replace ? with :p0, :p1, etc.
+            sql_query = query
+            for i in range(len(params)):
+                sql_query = sql_query.replace("?", f":p{i}", 1)
+        else:
+            param_dict = params
+            sql_query = query
+
+        result = db.session.execute(text(sql_query), param_dict)
+        db.session.commit()
+
         # For SELECT queries, return results
-        if query.strip().upper().startswith("SELECT"):
+        if sql_query.strip().upper().startswith("SELECT"):
             if fetch_one:
-                row = cursor.fetchone()
-                return dict(row) if row else None
-            return [dict(row) for row in cursor.fetchall()]
-        
+                row = result.fetchone()
+                return dict(row._mapping) if row else None
+            return [dict(row._mapping) for row in result.fetchall()]
+
         # For INSERT, return the last inserted ID
-        return cursor.lastrowid
-        
-    except sqlite3.Error as e:
-        db.rollback()
+        if sql_query.strip().upper().startswith("INSERT"):
+            return _get_last_insert_id()
+
+        return None
+
+    except Exception as e:
+        db.session.rollback()
         current_app.logger.error(f"Database error: {e}")
         raise
+
+
+def create_tables(db_session=None):
+    """
+    Create all database tables if they don't exist.
+    Called by init_db automatically.
+    """
+    # Tables are created by db.create_all() in init_db
+    # This function is kept for compatibility
+    pass

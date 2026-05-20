@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAGEN-Sync: Automated Wealth Orchestrator</title>
+</head>
+<body>
+  <nav class="main-nav">
+    <div class="nav-brand">
+      <h1>SAGEN-Sync</h1>
+      <span class="tagline">Automated Wealth Orchestrator</span>
+    </div>
+    <div class="nav-links">
+      <a href="#" class="nav-link active" data-page="dashboard">Dashboard</a>
+      <a href="#" class="nav-link" data-page="clients">Clients</a>
+      <a href="#" class="nav-link" data-page="history">History</a>
+    </div>
+  </nav>
+
+  <main id="app"></main>
+
+  <div id="loading" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

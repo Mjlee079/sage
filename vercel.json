@@ -1,0 +1,27 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "api/index.py"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "frontend-vite-dist/assets/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend-vite-dist/index.html"
+    }
+  ],
+  "env": {
+    "FLASK_ENV": "production"
+  }
+}

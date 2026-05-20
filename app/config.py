@@ -7,7 +7,7 @@ Centralizes all application configuration.
 Environment variables override defaults when available.
 
 Environment Variables:
-    RAILWAY_DATABASE_PATH: Path to SQLite database file
+    DATABASE_URL: PostgreSQL connection string (for Vercel)
     SECRET_KEY: Flask session encryption key
     CANVA_API_KEY: API key for Canva export (V2)
     FLASK_ENV: 'development' or 'production'
@@ -18,30 +18,33 @@ import os
 class Config:
     """
     Base configuration class.
-    
-    Attributes:
-        SECRET_KEY (str): Encryption key for Flask sessions
-        DATABASE_PATH (str): Full path to SQLite database file
-        CANVA_API_KEY (str): Optional API key for Canva integration
-        MAX_CONTENT_LENGTH (int): Max upload size (10MB)
     """
     
     # Flask secret key - used for session cookies and CSRF protection
-    # In production, set via environment variable
     SECRET_KEY = os.environ.get("SECRET_KEY", "sagen-sync-dev-key-2026")
     
-    # Database path - defaults to instance folder for portability
-    # Railway uses persistent volumes for the 'instance' directory
-    # In production, RAILWAY_DATABASE_PATH should point to a persistent volume
-    DATABASE_PATH = os.environ.get(
-        "RAILWAY_DATABASE_PATH",
-        os.path.join(os.path.dirname(__file__), "..", "instance", "sagen_sync.db")
-    )
+    # Database configuration
+    # For Vercel: Use DATABASE_URL environment variable (PostgreSQL)
+    # For local dev: Falls back to SQLite
+    DATABASE_URL = os.environ.get("DATABASE_URL")
     
-    # Ensure database directory exists (important for Railway)
-    _db_dir = os.path.dirname(DATABASE_PATH)
-    if _db_dir and not os.path.exists(_db_dir):
-        os.makedirs(_db_dir, exist_ok=True)
+    if DATABASE_URL:
+        # PostgreSQL (Vercel)
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
+        SQLALCHEMY_ENGINE_OPTIONS = {
+            "pool_pre_ping": True,
+            "pool_recycle": 300,
+        }
+    else:
+        # SQLite (local development)
+        SQLALCHEMY_DATABASE_URI = os.environ.get(
+            "RAILWAY_DATABASE_PATH",
+            "sqlite:///" + os.path.join(os.path.dirname(__file__), "..", "instance", "sagen_sync.db")
+        )
+        SQLALCHEMY_ENGINE_OPTIONS = {}
+    
+    # Flask-SQLAlchemy settings
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Flask environment
     FLASK_ENV = os.environ.get("FLASK_ENV", "production")
