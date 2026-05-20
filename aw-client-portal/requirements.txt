@@ -1,0 +1,18 @@
+# SAGEN-Sync: Automated Wealth Orchestrator
+# Python dependencies
+
+# Web Framework - Flask handles HTTP routing, sessions, and request handling
+Flask==3.0.0
+
+# PDF Generation - xhtml2pdf converts HTML+CSS to PDF documents
+# Works cross-platform (Windows/Linux/Mac) without GTK dependencies
+xhtml2pdf==0.2.17
+
+# Date handling - Python datetime is sufficient, but dateutil helps with parsing
+python-dateutil==2.9.0
+
+# WSGI server for production (Railway compatible)
+gunicorn==21.2.0
+
+# Canva API (optional - V2 feature)
+# requests==2.31.0  # Uncomment when Canva API is implemented

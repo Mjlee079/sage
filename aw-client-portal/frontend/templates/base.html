@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SAGEN-Sync{% endblock %}</title>
+    
+    {# Main stylesheet -- modern, clean, financial-inspired design #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {# Google Fonts -- professional, readable fonts #}
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {# Navigation Bar #}
+    <nav class="navbar">
+        <div class="container navbar-container">
+            <a href="{{ url_for('dashboard.index') }}" class="logo">
+                {# Logo / Brand #}
+                <span class="logo-icon">S</span>
+                <span class="logo-text">SAGEN-Sync</span>
+            </a>
+            
+            <ul class="nav-links">
+                <li><a href="{{ url_for('dashboard.index') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('client.add_form') }}">Add Client</a></li>
+                <li><a href="{{ url_for('history.all_reports') }}">History</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    {# Flash Messages (one-time notifications) #}
+    {# These flash messages are rendered by Flask and show only once #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    {# Main Content Area #}
+    <main class="main-content">
+        {% block content %}
+        {# Pages inject their content here #}
+        {% endblock %}
+    </main>
+    
+    {# Footer #}
+    <footer class="footer">
+        <div class="container">
+            <p>SAGEN-Sync: Automated Wealth Orchestrator &copy; 2026</p>
+            <p class="footer-version">Version 1.0 | Built for AW Client Report Portal</p>
+        </div>
+    </footer>
+    
+    {# Global JavaScript #}
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SACS Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            color: #1E293B;
+            font-size: 11pt;
+            line-height: 1.5;
+        }
+        
+        .header {
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #2563EB;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #1E293B;
+            margin: 0 0 5px;
+        }
+        
+        .header .quarter {
+            font-size: 12pt;
+            color: #64748B;
+        }
+        
+        .header .client-name {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #2563EB;
+            margin-top: 5px;
+        }
+        
+        .client-info {
+            background-color: #F8FAFC;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #E2E8F0;
+        }
+        
+        .client-info td {
+            text-align: center;
+            padding: 10px;
+            width: 33%;
+        }
+        
+        .client-info .label {
+            font-size: 9pt;
+            color: #64748B;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 3px;
+        }
+        
+        .client-info .value {
+            font-size: 11pt;
+            font-weight: bold;
+        }
+        
+        .section-title {
+            font-size: 16pt;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px 0 15px;
+        }
+        
+        .flow-table {
+            width: 100%;
+            margin: 15px 0;
+            border-collapse: separate;
+            border-spacing: 10px;
+        }
+        
+        .flow-table td {
+            text-align: center;
+            padding: 20px 15px;
+            color: white;
+            width: 30%;
+        }
+        
+        .flow-table .inflow {
+            background-color: #10B981;
+        }
+        
+        .flow-table .outflow {
+            background-color: #EF4444;
+        }
+        
+        .flow-table .reserve {
+            background-color: #3B82F6;
+        }
+        
+        .flow-table .label {
+            font-size: 10pt;
+            text-transform: uppercase;
+            opacity: 0.9;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .flow-table .amount {
+            font-size: 16pt;
+            font-weight: bold;
+        }
+        
+        .arrow-cell {
+            text-align: center;
+            font-size: 18pt;
+            color: #64748B;
+            width: 10%;
+        }
+        
+        .calculations {
+            background-color: #F8FAFC;
+            padding: 15px;
+            margin-top: 20px;
+            border: 1px solid #E2E8F0;
+        }
+        
+        .calculations h3 {
+            font-size: 13pt;
+            font-weight: bold;
+            margin: 0 0 10px;
+        }
+        
+        .calc-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .calc-table td {
+            padding: 8px 0;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        
+        .calc-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .calc-table .total td {
+            font-weight: bold;
+            font-size: 12pt;
+            color: #2563EB;
+            border-top: 2px solid #2563EB;
+            padding-top: 10px;
+        }
+        
+        .number {
+            text-align: right;
+            font-weight: bold;
+        }
+        
+        .footer-note {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #E2E8F0;
+            text-align: center;
+            font-size: 9pt;
+            color: #64748B;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Simple Automated Cash Flow System</h1>
+        <div class="quarter">{{ report.quarter }} {{ report.year }}</div>
+        <div class="client-name">{{ client.first_name }} {{ client.last_name }}</div>
+    </div>
+    
+    <table class="client-info">
+        <tr>
+            <td>
+                <span class="label">Date of Birth</span>
+                <span class="value">{{ client.date_of_birth }}</span>
+            </td>
+            <td>
+                <span class="label">Age</span>
+                <span class="value">{{ client.age }}</span>
+            </td>
+            <td>
+                <span class="label">Last 4 SSN</span>
+                <span class="value">***-{{ client.ssn_last_four }}</span>
+            </td>
+        </tr>
+    </table>
+    
+    <div class="section-title">Monthly Cash Flow</div>
+    
+    <table class="flow-table">
+        <tr>
+            <td class="inflow">
+                <span class="label">Inflow</span>
+                <span class="amount">{{ "$%.2f" | format(report.inflow_amount) }}</span>
+            </td>
+            <td class="arrow-cell">&rarr;</td>
+            <td class="outflow">
+                <span class="label">Outflow</span>
+                <span class="amount">{{ "$%.2f" | format(report.outflow_amount) }}</span>
+            </td>
+            <td class="arrow-cell">&rarr;</td>
+            <td class="reserve">
+                <span class="label">Private Reserve</span>
+                <span class="amount">{{ "$%.2f" | format(report.excess_amount) }}</span>
+            </td>
+        </tr>
+    </table>
+    
+    <div class="calculations">
+        <h3>Calculations Summary</h3>
+        <table class="calc-table">
+            <tr>
+                <td>Monthly Inflow (After-Tax Salary)</td>
+                <td class="number">{{ "$%.2f" | format(report.inflow_amount) }}</td>
+            </tr>
+            <tr>
+                <td>Monthly Outflow (Expense Budget)</td>
+                <td class="number">{{ "$%.2f" | format(report.outflow_amount) }}</td>
+            </tr>
+            <tr>
+                <td>Private Reserve Target</td>
+                <td class="number">{{ "$%.2f" | format(report.excess_amount) }}</td>
+            </tr>
+            <tr class="total">
+                <td>Grand Total (Excess to Reserve)</td>
+                <td class="number">{{ "$%.2f" | format(report.excess_amount) }}</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="footer-note">
+        Generated by SAGEN-Sync | Confidential Financial Document
+    </div>
+</body>
+</html>

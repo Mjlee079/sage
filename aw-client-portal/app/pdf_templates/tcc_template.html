@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TCC Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            color: #1E293B;
+            font-size: 10pt;
+            line-height: 1.5;
+        }
+        
+        .header {
+            text-align: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #2563EB;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #1E293B;
+            margin: 0 0 5px;
+        }
+        
+        .header .quarter {
+            font-size: 12pt;
+            color: #64748B;
+        }
+        
+        .header .client-name {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #2563EB;
+            margin-top: 5px;
+        }
+        
+        .client-info-table {
+            width: 100%;
+            margin-bottom: 20px;
+            border-collapse: separate;
+            border-spacing: 10px;
+        }
+        
+        .client-card {
+            background-color: #ECFDF5;
+            border: 1px solid #A7F3D0;
+            padding: 15px;
+            width: 50%;
+            vertical-align: top;
+        }
+        
+        .client-card h3 {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #065F46;
+            margin: 0 0 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #A7F3D0;
+        }
+        
+        .client-card td {
+            padding: 5px 0;
+            font-size: 10pt;
+        }
+        
+        .client-card .label {
+            color: #64748B;
+            width: 40%;
+        }
+        
+        .client-card .value {
+            font-weight: bold;
+            color: #065F46;
+        }
+        
+        .section-title {
+            font-size: 14pt;
+            font-weight: bold;
+            margin: 20px 0 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #2563EB;
+        }
+        
+        .account-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        .account-table th {
+            background-color: #F8FAFC;
+            text-align: left;
+            padding: 8px 10px;
+            font-size: 9pt;
+            text-transform: uppercase;
+            color: #64748B;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        
+        .account-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+        
+        .account-table .amount {
+            text-align: right;
+            font-weight: bold;
+            font-size: 11pt;
+        }
+        
+        .totals-section {
+            background-color: #2563EB;
+            color: white;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .totals-section h3 {
+            font-size: 16pt;
+            font-weight: bold;
+            margin: 0 0 15px;
+            text-align: center;
+        }
+        
+        .totals-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .totals-table td {
+            padding: 10px;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .totals-table .label {
+            font-size: 9pt;
+            opacity: 0.8;
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .totals-table .value {
+            font-size: 14pt;
+            font-weight: bold;
+        }
+        
+        .totals-table .grand-total td {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid #FDE68A;
+            padding: 15px;
+        }
+        
+        .totals-table .grand-total .label {
+            font-size: 11pt;
+            color: #FDE68A;
+        }
+        
+        .totals-table .grand-total .value {
+            font-size: 20pt;
+            color: #FDE68A;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Total Client Chart</h1>
+        <div class="quarter">{{ report.quarter }} {{ report.year }}</div>
+        <div class="client-name">{{ client.first_name }} {{ client.last_name }}</div>
+    </div>
+    
+    <table class="client-info-table">
+        <tr>
+            <td class="client-card">
+                <h3>Client 1</h3>
+                <table>
+                    <tr>
+                        <td class="label">Name</td>
+                        <td class="value">{{ client.first_name }} {{ client.last_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">DOB</td>
+                        <td class="value">{{ client.date_of_birth }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">SSN</td>
+                        <td class="value">***-{{ client.ssn_last_four }}</td>
+                    </tr>
+                </table>
+            </td>
+            
+            {% if client.is_married %}
+            <td class="client-card">
+                <h3>Client 2</h3>
+                <table>
+                    <tr>
+                        <td class="label">Name</td>
+                        <td class="value">{{ client.spouse_first_name }} {{ client.spouse_last_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">DOB</td>
+                        <td class="value">{{ client.spouse_dob }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">SSN</td>
+                        <td class="value">***-{{ client.spouse_ssn_last_four }}</td>
+                    </tr>
+                </table>
+            </td>
+            {% endif %}
+        </tr>
+    </table>
+    
+    <h2 class="section-title">Retirement Accounts</h2>
+    <table class="account-table">
+        <tr>
+            <th>Account</th>
+            <th style="text-align: right;">Balance</th>
+        </tr>
+        {% for account in calculations.tcc.net_worth_components.c1_retirement_accounts %}
+        <tr>
+            <td>{{ account.name }}</td>
+            <td class="amount">{{ "$%.2f" | format(account.balance) }}</td>
+        </tr>
+        {% endfor %}
+        
+        {% if client.is_married %}
+            {% for account in calculations.tcc.net_worth_components.c2_retirement_accounts %}
+            <tr>
+                <td>{{ account.name }}</td>
+                <td class="amount">{{ "$%.2f" | format(account.balance) }}</td>
+            </tr>
+            {% endfor %}
+        {% endif %}
+        
+        <tr style="font-weight: bold; background-color: #F8FAFC;">
+            <td>Total Retirement</td>
+            <td class="amount">{{ "$%.2f" | format(calculations.tcc.total_retirement_client1 + calculations.tcc.total_retirement_client2) }}</td>
+        </tr>
+    </table>
+    
+    <h2 class="section-title">Non-Retirement Accounts</h2>
+    <table class="account-table">
+        <tr>
+            <th>Account</th>
+            <th style="text-align: right;">Balance</th>
+        </tr>
+        {% for account in calculations.tcc.net_worth_components.non_retirement_accounts %}
+        <tr>
+            <td>{{ account.name }}</td>
+            <td class="amount">{{ "$%.2f" | format(account.balance) }}</td>
+        </tr>
+        {% endfor %}
+        
+        <tr style="font-weight: bold; background-color: #F8FAFC;">
+            <td>Total Non-Retirement</td>
+            <td class="amount">{{ "$%.2f" | format(calculations.tcc.total_non_retirement) }}</td>
+        </tr>
+    </table>
+    
+    <h2 class="section-title">Trust & Liabilities</h2>
+    <table class="account-table">
+        <tr>
+            <th>Item</th>
+            <th style="text-align: right;">Value</th>
+        </tr>
+        <tr>
+            <td>Trust Property Value</td>
+            <td class="amount">{{ "$%.2f" | format(calculations.tcc.trust_value) }}</td>
+        </tr>
+        <tr>
+            <td>Total Liabilities</td>
+            <td class="amount">{{ "$%.2f" | format(calculations.tcc.total_liabilities) }}</td>
+        </tr>
+    </table>
+    
+    <div class="totals-section">
+        <h3>Summary</h3>
+        <table class="totals-table">
+            <tr>
+                <td>
+                    <span class="label">Client 1 Retirement</span>
+                    <span class="value">{{ "$%.2f" | format(calculations.tcc.total_retirement_client1) }}</span>
+                </td>
+                {% if client.is_married %}
+                <td>
+                    <span class="label">Client 2 Retirement</span>
+                    <span class="value">{{ "$%.2f" | format(calculations.tcc.total_retirement_client2) }}</span>
+                </td>
+                {% endif %}
+                <td>
+                    <span class="label">Non-Retirement</span>
+                    <span class="value">{{ "$%.2f" | format(calculations.tcc.total_non_retirement) }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <span class="label">Trust Value</span>
+                    <span class="value">{{ "$%.2f" | format(calculations.tcc.trust_value) }}</span>
+                </td>
+                <td>
+                    <span class="label">Total Liabilities</span>
+                    <span class="value">{{ "$%.2f" | format(calculations.tcc.total_liabilities) }}</span>
+                </td>
+                <td>
+                    <span class="label">Private Reserve</span>
+                    <span class="value">{{ "$%.2f" | format(report.private_reserve_balance) }}</span>
+                </td>
+            </tr>
+            <tr class="grand-total">
+                <td colspan="{% if client.is_married %}3{% else %}2{% endif %}">
+                    <span class="label">GRAND TOTAL</span>
+                    <span class="value">{{ "$%.2f" | format(calculations.tcc.grand_total) }}</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>

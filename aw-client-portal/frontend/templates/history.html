@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{# History Page -- All Reports #}
+
+{% block title %}
+    {% if view == 'client' %}
+        {{ client.first_name }}'s Reports | SAGEN-Sync
+    {% else %}
+        Report History | SAGEN-Sync
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1>
+            {% if view == 'client' %}
+                Reports for {{ client.first_name }} {{ client.last_name }}
+            {% else %}
+                All Report History
+            {% endif %}
+        </h1>
+        <p class="lead">View and re-download past quarterly reports.</p>
+    </header>
+    
+    {# Filter Bar #}
+    <div class="filter-bar">
+        <div class="filter-group">
+            <label for="filter-quarter">Quarter:</label>
+            <select id="filter-quarter" onchange="filterReports()">
+                <option value="all">All Quarters</option>
+                <option value="Q1">Q1</option>
+                <option value="Q2">Q2</option>
+                <option value="Q3">Q3</option>
+                <option value="Q4">Q4</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="filter-year">Year:</label>
+            <select id="filter-year" onchange="filterReports()">
+                <option value="all">All Years</option>
+                <option value="2026">2026</option>
+                <option value="2025">2025</option>
+                <option value="2024">2024</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="filter-status">Status:</label>
+            <select id="filter-status" onchange="filterReports()">
+                <option value="all">All Status</option>
+                <option value="finalized">Finalized</option>
+                <option value="draft">Draft</option>
+            </select>
+        </div>
+    </div>
+    
+    {# Reports Table #}
+    {% if reports %}
+        <div class="table-responsive">
+            <table class="data-table" id="reports-table">
+                <thead>
+                    <tr>
+                        {% if view != 'client' %}
+                            <th>Client</th>
+                        {% endif %}
+                        <th>Quarter</th>
+                        <th>Year</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for report in reports %}
+                        <tr data-quarter="{{ report.quarter }}" data-year="{{ report.year }}" data-status="{{ report.status }}">
+                            {% if view != 'client' %}
+                                <td>{{ report.client_name or 'N/A' }}</td>
+                            {% endif %}
+                            <td>{{ report.quarter }}</td>
+                            <td>{{ report.year }}</td>
+                            <td>
+                                <span class="status-badge {{ report.status }}">
+                                    {{ report.status.capitalize() }}
+                                </span>
+                            </td>
+                            <td>{{ report.created_at }}</td>
+                            <td class="actions">
+                                {% if report.status == 'finalized' %}
+                                    <a href="{{ url_for('pdf.download_sacs', report_id=report.id) }}" class="btn btn-sm btn-outline">
+                                        SACS
+                                    </a>
+                                    <a href="{{ url_for('pdf.download_tcc', report_id=report.id) }}" class="btn btn-sm btn-primary">
+                                        TCC
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">Draft</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📋</div>
+            <h3>No reports yet</h3>
+            <p>Reports will appear here once generated.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function filterReports() {
+        const quarter = document.getElementById('filter-quarter').value;
+        const year = document.getElementById('filter-year').value;
+        const status = document.getElementById('filter-status').value;
+        
+        const rows = document.querySelectorAll('#reports-table tbody tr');
+        
+        rows.forEach(row => {
+            const rowQuarter = row.getAttribute('data-quarter');
+            const rowYear = row.getAttribute('data-year');
+            const rowStatus = row.getAttribute('data-status');
+            
+            const quarterMatch = quarter === 'all' || quarter === rowQuarter;
+            const yearMatch = year === 'all' || year === rowYear;
+            const statusMatch = status === 'all' || status === rowStatus;
+            
+            if (quarterMatch && yearMatch && statusMatch) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{# Client Form Page -- Add or Edit Client #}
+{# mode is "add" or "edit" -- passed from the route #}
+
+{% block title %}
+    {% if mode == "add" %}
+        Add New Client | SAGEN-Sync
+    {% else %}
+        Edit Client | SAGEN-Sync
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <header class="page-header">
+        <h1>
+            {% if mode == "add" %}Add New Client{% else %}Edit Client{% endif %}
+        </h1>
+        <p class="lead">
+            Enter the client's static information. This is the "one-time setup" step.
+        </p>
+    </header>
+    
+    {# Navigation Breadcrumb #}
+    <nav class="breadcrumb">
+        <a href="{{ url_for('dashboard.index') }}">Dashboard</a>
+        <span class="separator">&rsaquo;</span>
+        {% if mode == "edit" %}
+            <a href="{{ url_for('client.view_client', client_id=client.id) }}">
+                {{ client.first_name }} {{ client.last_name }}
+            </a>
+            <span class="separator">&rsaquo;</span>
+        {% endif %}
+        <span>
+            {% if mode == "add" %}New Client{% else %}Edit{% endif %}
+        </span>
+    </nav>
+    
+    {# Client Form #}
+    <form 
+        method="POST" 
+        action="{% if mode == 'add' %}{{ url_for('client.create_client') }}{% else %}{{ url_for('client.update_client', client_id=client.id) }}{% endif %}"
+        class="client-form"
+    >
+        {# SECTION 1: Basic Info #}
+        <fieldset class="form-section">
+            <legend>Client Information</legend>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="first_name">First Name *</label>
+                    <input 
+                        type="text" 
+                        id="first_name" 
+                        name="first_name" 
+                        value="{{ client.first_name if client else '' }}" 
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="last_name">Last Name *</label>
+                    <input 
+                        type="text" 
+                        id="last_name" 
+                        name="last_name" 
+                        value="{{ client.last_name if client else '' }}" 
+                        required
+                    >
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date_of_birth">Date of Birth *</label>
+                    <input 
+                        type="date" 
+                        id="date_of_birth" 
+                        name="date_of_birth" 
+                        value="{{ client.date_of_birth if client else '' }}" 
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="ssn_last_four">Last 4 of SSN *</label>
+                    <input 
+                        type="text" 
+                        id="ssn_last_four" 
+                        name="ssn_last_four" 
+                        value="{{ client.ssn_last_four if client else '' }}" 
+                        pattern="[0-9]{4}" 
+                        maxlength="4" 
+                        required 
+                        title="Last 4 digits of SSN"
+                    >
+                </div>
+            </div>
+            
+            {# Marital Status Toggle #}
+            <div class="form-group">
+                <label class="toggle-label">
+                    <input 
+                        type="checkbox" 
+                        name="is_married" 
+                        id="is_married" 
+                        value="1" 
+                        {% if client and client.is_married %}checked{% endif %}
+                    >
+                    <span class="toggle-text">Client is married (enable spouse info)</span>
+                </label>
+            </div>
+        </fieldset>
+        
+        {# SECTION 2: Spouse Info (conditionally shown) #}
+        <fieldset class="form-section" id="spouse-section" 
+            {% if not (client and client.is_married) %}style="display:none;"{% endif %}>
+            
+            <legend>Spouse Information</legend>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="spouse_first_name">First Name</label>
+                    <input 
+                        type="text" 
+                        id="spouse_first_name" 
+                        name="spouse_first_name" 
+                        value="{{ client.spouse_first_name if client else '' }}"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="spouse_last_name">Last Name</label>
+                    <input 
+                        type="text" 
+                        id="spouse_last_name" 
+                        name="spouse_last_name" 
+                        value="{{ client.spouse_last_name if client else '' }}"
+                    >
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="spouse_dob">Date of Birth</label>
+                    <input 
+                        type="date" 
+                        id="spouse_dob" 
+                        name="spouse_dob" 
+                        value="{{ client.spouse_dob if client else '' }}"
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="spouse_ssn_last_four">Last 4 of SSN</label>
+                    <input 
+                        type="text" 
+                        id="spouse_ssn_last_four" 
+                        name="spouse_ssn_last_four" 
+                        value="{{ client.spouse_ssn_last_four if client else '' }}" 
+                        pattern="[0-9]{4}" 
+                        maxlength="4"
+                    >
+                </div>
+            </div>
+        </fieldset>
+        
+        {# SECTION 3: Financial Info #}
+        <fieldset class="form-section">
+            <legend>Financial Information</legend>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="monthly_salary">Monthly Salary (After Tax) *</label>
+                    <div class="input-prefix">$</div>
+                    <input 
+                        type="number" 
+                        id="monthly_salary" 
+                        name="monthly_salary" 
+                        step="0.01" 
+                        min="0" 
+                        value="{{ client.monthly_salary if client else '' }}" 
+                        required
+                    >
+                </div>
+                <div class="form-group">
+                    <label for="agreed_expense_budget">Agreed Monthly Expense Budget *</label>
+                    <div class="input-prefix">$</div>
+                    <input 
+                        type="number" 
+                        id="agreed_expense_budget" 
+                        name="agreed_expense_budget" 
+                        step="0.01" 
+                        min="0" 
+                        value="{{ client.agreed_expense_budget if client else '' }}" 
+                        required
+                    >
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="private_reserve_target">
+                        Private Reserve Target (optional, leave blank for auto-calculation)
+                    </label>
+                    <div class="input-prefix">$</div>
+                    <input 
+                        type="number" 
+                        id="private_reserve_target" 
+                        name="private_reserve_target" 
+                        step="0.01" 
+                        min="0" 
+                        value="{{ client.private_reserve_target if client else '' }}"
+                    >
+                </div>
+            </div>
+        </fieldset>
+        
+        {# SECTION 4: Account Structure #}
+        <fieldset class="form-section">
+            <legend>Account Structure</legend>
+            
+            <p class="help-text">
+                Define the accounts to track. Each account type will be shown in the TCC report.
+            </p>
+            
+            {# Dynamic Account Builder #}
+            <div id="retirement-accounts" class="account-list">
+                <h4>Retirement Accounts</h4>
+                <div id="retirement-accounts-list">
+                    {# Existing accounts (if editing) #}
+                    {% if client and client.retirement_accounts %}
+                        {% for acc in client.retirement_accounts %}
+                            <div class="account-row">
+                                <input type="text" name="retirement_account_{{ loop.index }}_type" value="{{ acc.type }}" placeholder="Account type (e.g., IRA, Roth IRA)">
+                                <input type="text" name="retirement_account_{{ loop.index }}_last_four" value="{{ acc.last_four }}" placeholder="Last 4 digits" maxlength="4">
+                                <select name="retirement_account_{{ loop.index }}_owner">
+                                    <option value="client1" {% if acc.owner == 'client1' %}selected{% endif %}>Client 1</option>
+                                    <option value="spouse" {% if acc.owner == 'spouse' %}selected{% endif %}>Client 2 (Spouse)</option>
+                                </select>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <button type="button" class="btn btn-sm btn-outline" onclick="addAccount('retirement')">+ Add Retirement Account</button>
+            </div>
+            
+            <div id="non-retirement-accounts" class="account-list">
+                <h4>Non-Retirement Accounts</h4>
+                <div id="non-retirement-accounts-list">
+                    {% if client and client.non_retirement_accounts %}
+                        {% for acc in client.non_retirement_accounts %}
+                            <div class="account-row">
+                                <input type="text" name="non_retirement_account_{{ loop.index }}_type" value="{{ acc.type }}" placeholder="Account type (e.g., Brokerage, Joint)">
+                                <input type="text" name="non_retirement_account_{{ loop.index }}_last_four" value="{{ acc.last_four }}" placeholder="Last 4 digits" maxlength="4">
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                <button type="button" class="btn btn-sm btn-outline" onclick="addAccount('non_retirement')">+ Add Non-Retirement Account</button>
+            </div>
+        </fieldset>
+        
+        {# SECTION 5: Trust Info #}
+        <fieldset class="form-section">
+            <legend>Trust Information</legend>
+            
+            <div class="form-group">
+                <label for="trust_property_address">Property Address (for Zillow lookup)</label>
+                <input 
+                    type="text" 
+                    id="trust_property_address" 
+                    name="trust_property_address" 
+                    value="{{ client.trust_info.property_address if client and client.trust_info else '' }}"
+                >
+            </div>
+            <div class="form-group">
+                <label for="trust_zillow_value">Current Zillow Value (or leave for manual entry)</label>
+                <div class="input-prefix">$</div>
+                <input 
+                    type="number" 
+                    id="trust_zillow_value" 
+                    name="trust_zillow_value" 
+                    step="0.01" 
+                    min="0" 
+                    value="{{ client.trust_info.zillow_value if client and client.trust_info else '' }}"
+                >
+            </div>
+        </fieldset>
+        
+        {# SECTION 6: Liabilities #}
+        <fieldset class="form-section">
+            <legend>Liabilities</legend>
+            
+            <div id="liabilities-list">
+                {% if client and client.liabilities %}
+                    {% for liab in client.liabilities %}
+                        <div class="liability-row">
+                            <input type="text" name="liability_{{ loop.index0 }}_type" value="{{ liab.type }}" placeholder="Type (e.g., Mortgage, Auto Loan)">
+                            <input type="number" name="liability_{{ loop.index0 }}_balance" value="{{ liab.balance }}" step="0.01" placeholder="Balance">
+                            <input type="number" name="liability_{{ loop.index0 }}_interest_rate" value="{{ liab.interest_rate }}" step="0.01" placeholder="Interest Rate %">
+                            <input type="number" name="liability_{{ loop.index0 }}_insurance_deductible" value="{{ liab.insurance_deductible }}" step="0.01" placeholder="Insurance Deductible">
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <button type="button" class="btn btn-sm btn-outline" onclick="addLiability()">+ Add Liability</button>
+        </fieldset>
+        
+        {# SECTION 7: Notes #}
+        <fieldset class="form-section">
+            <legend>Additional Notes</legend>
+            <div class="form-group">
+                <textarea id="notes" name="notes" rows="4" placeholder="Any additional notes about this client...">{{ client.notes if client else '' }}</textarea>
+            </div>
+        </fieldset>
+        
+        {# Form Actions #}
+        <div class="form-actions">
+            <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                {% if mode == "add" %}Create Client{% else %}Save Changes{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+{# Client form specific JavaScript for dynamic fields #}
+<script src="{{ url_for('static', filename='js/client-form.js') }}"></script>
+{% endblock %}
