@@ -32,10 +32,19 @@ class Config:
     
     # Database path - defaults to instance folder for portability
     # Railway uses persistent volumes for the 'instance' directory
+    # In production, RAILWAY_DATABASE_PATH should point to a persistent volume
     DATABASE_PATH = os.environ.get(
         "RAILWAY_DATABASE_PATH",
         os.path.join(os.path.dirname(__file__), "..", "instance", "sagen_sync.db")
     )
+    
+    # Ensure database directory exists (important for Railway)
+    _db_dir = os.path.dirname(DATABASE_PATH)
+    if _db_dir and not os.path.exists(_db_dir):
+        os.makedirs(_db_dir, exist_ok=True)
+    
+    # Flask environment
+    FLASK_ENV = os.environ.get("FLASK_ENV", "production")
     
     # Canva API - remains empty in V1, populated in V2
     CANVA_API_KEY = os.environ.get("CANVA_API_KEY", None)
