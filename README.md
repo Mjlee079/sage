@@ -13,7 +13,7 @@ SAGEN-Sync streamlines quarterly wealth reporting for advisory teams. Advisors m
 | Area | Description |
 |------|-------------|
 | **Client management** | CRUD for client/family profiles with retirement, non-retirement, trust, and liability structures stored as JSON |
-| **Quarterly reports** | Draft → data entry → finalize workflow per client, quarter (Q1–Q4), and year |
+| **Quarterly reports** | Draft -> data entry -> finalize workflow per client, quarter (Q1-Q4), and year |
 | **Calculation engine** | Deterministic SACS (cash flow) and TCC (total client capital) math with buffer/floor rules |
 | **PDF generation** | HTML templates rendered to PDF via `xhtml2pdf` (SACS + TCC) |
 | **Report history** | Past reports preserved; PDFs can be downloaded again |
@@ -45,8 +45,8 @@ SAGEN-Sync streamlines quarterly wealth reporting for advisory teams. Advisors m
 ### SACS (cash flow summary)
 - **Inflow** = monthly salary (after tax)
 - **Outflow** = agreed expense budget
-- **Excess** = Inflow − Outflow
-- **Private reserve target** = (6 × monthly expenses) + insurance deductibles + ($1,000 × number of accounts)
+- **Excess** = Inflow - Outflow
+- **Private reserve target** = (6 x monthly expenses) + insurance deductibles + ($1,000 x number of accounts)
 - Buffer warnings when any account balance is below the $1,000 floor
 
 ### TCC (total client capital)
@@ -163,7 +163,7 @@ Environment variables (see `app/config.py`):
 | `CANVA_API_KEY` | Canva export (V2) | None |
 | `FLASK_ENV` | `development` or `production` | — |
 
-Constants include a **$1,000 floor per account**, **6 months** for private reserve targeting, and quarterly month ranges (Q1–Q4).
+Constants include a **$1,000 floor per account**, **6 months** for private reserve targeting, and quarterly month ranges (Q1-Q4).
 
 ---
 
@@ -209,7 +209,7 @@ Deleting a client cascades to their reports.
 
 Planned but not fully implemented in V1:
 
-- **AutomationService** — Monthly excess transfers (salary − budget − floor)
+- **AutomationService** — Monthly excess transfers (salary - budget - floor)
 - **BufferManagerService** — Real-time floor monitoring and alerts
 - **External adapters** — Schwab, Plaid, RightCapital, PreciseFP
 - **Canva integration** — Export reports to Canva designs
